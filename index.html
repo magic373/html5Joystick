@@ -75,13 +75,37 @@
         }
 
         var cx,cy;
-        var r = 100;
-        function onStart(e) {
+        var R = 100;
+        function onTouchStart(e) {
             if (event.touches.length >= 2)
                 return;
+            startHandle(e.touches[0].clientX, e.touches[0].clientY);
+        }
 
-            cx = bg.style.left = joystick.style.left = e.touches[0].clientX;
-            cy = bg.style.top = joystick.style.top = e.touches[0].clientY;
+        function onTouchMove(e) {
+            if (!e.touches || e.touches.length <= 0) return;
+            e.preventDefault();
+            moveHandle(e.touches[0].clientX, e.touches[0].clientY);
+        }
+        
+        function onEnd(e) {
+            if(timeId)
+                clearInterval(timeId);
+            bg.style.display = "none";
+            joystick.style.display = "none";
+        }
+
+        function onMouseDown(e) {
+            startHandle(e.clientX, e.clientY);
+        }
+        function onMouseMove(e) {
+            e.preventDefault();
+            moveHandle(e.clientX, e.clientY);
+        }
+
+        function startHandle(clientX, clientY) {
+            cx = bg.style.left = joystick.style.left = clientX;
+            cy = bg.style.top = joystick.style.top = clientY;
             bg.style.display = "block";
             joystick.style.display = "block";
 
@@ -89,53 +113,36 @@
             if(timeId)
                 clearInterval(timeId);
             timeId = setInterval(onEf, 100);
-
         }
-        function onMove(e) {
-            if (!e.touches || e.touches.length <= 0) return;
-            e.preventDefault();
-
-            if (getDistance(e.touches[0].clientX, e.touches[0].clientY, cx, cy) > r)
+        function moveHandle(clientX, clientY) {
+            if (getDistance(clientX, clientY, cx, cy) > R)
             {
-                var subX = e.touches[0].clientX - cx;
-                var subY = e.touches[0].clientY - cy;
+                var subX = clientX - cx;
+                var subY = clientY - cy;
 
                 var subLen = Math.sqrt(subX * subX + subY * subY);//长度
                 if (subLen != 0)
                 {
                     var rate = 1.0 / subLen;//缩放率 （Normallize 单位化)
-                    subX *= rate * r;
-                    subY *= rate * r;
+                    subX *= rate * R;
+                    subY *= rate * R;
                 }
                 joystick.style.left = cx + subX;
                 joystick.style.top = cy + subY;
             }
             else
             {
-                joystick.style.left = e.touches[0].clientX;
-                joystick.style.top = e.touches[0].clientY;
+                joystick.style.left = clientX;
+                joystick.style.top = clientY;
             }
-
-            console.log(joystick.style.left)
-
-        }
-        function onEnd(e) {
-            if(timeId)
-                clearInterval(timeId);
-
-
-            
-            bg.style.display = "none";
-            joystick.style.display = "none";
-
         }
 
-        stage.addEventListener('touchstart', onStart);
-        stage.addEventListener('touchmove', onMove);
+        stage.addEventListener('touchstart', onTouchStart);
+        stage.addEventListener('touchmove', onTouchMove);
         stage.addEventListener('touchend', onEnd);
-        stage.addEventListener('mousestart', onStart);
-        stage.addEventListener('mousemove', onMove);
-        stage.addEventListener('mouseend', onEnd);
+        stage.addEventListener('mousedown', onMouseDown);
+        stage.addEventListener('mousemove', onMouseMove);
+        stage.addEventListener('mouseup', onEnd);
 	</script>
 </body>
 </html>
