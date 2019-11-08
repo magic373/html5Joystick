@@ -1,0 +1,141 @@
+<html>
+<head>
+	<title>Joystick</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<style>
+		body{
+			display: flex;
+			margin: 0;
+            
+			background: rgba(0,0,0);
+		}
+        #stage {
+            width:100%;
+            height:100%;
+        }
+		#bg{
+            position: absolute;
+			z-index: 100;
+            display:none;
+            margin:-100px;
+			width: 200px;
+			height: 200px;
+			border-radius: 100px;
+			background: rgba(38, 74, 96,1);
+			border: solid rgba(0,0,0,0.14) 1px;
+			box-shadow: 0 0 10px 0 rgba(0,0,0,0.2);
+		}
+		#joystick{
+			z-index: 101;
+			position: absolute;
+			margin: -40px;
+            display:none;
+			width: 80px;
+			height: 80px;
+			border-radius: 100px;
+			background: rgba(255, 255, 255, 0.7);
+			border: solid rgba(0,0,0,0.14) 1px;
+			box-shadow: 0 0 10px 0 rgba(0,0,0,0.2);
+		}
+		.overlay{
+
+			position: absolute;
+			z-index: 99;
+			height: 100%;       
+			width: 100%;
+		}
+	</style>
+</head>
+<body>
+    <div style="position:absolute">
+        <div id="console" style="color:white"></div>
+    </div>
+    <div id="stage" style="position:absolute">
+        <div id='bg'></div>
+        <div id="joystick"></div>
+    </div>
+	<script>
+
+        function getDistance(x1,y1,x2,y2)
+        {
+            return Math.sqrt( (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) );
+        }
+
+        var csl = document.getElementById('console');
+        var bg = document.getElementById('bg');
+        var joystick = document.getElementById('joystick');
+        var stage = document.getElementById('stage');
+
+        var timeId = null;
+        
+        var locked = false;
+
+        function onEf() {
+            //send data
+        }
+
+        var cx,cy;
+        var r = 100;
+        function onStart(e) {
+            if (event.touches.length >= 2)
+                return;
+
+            cx = bg.style.left = joystick.style.left = e.touches[0].clientX;
+            cy = bg.style.top = joystick.style.top = e.touches[0].clientY;
+            bg.style.display = "block";
+            joystick.style.display = "block";
+
+            //开启每帧处理
+            if(timeId)
+                clearInterval(timeId);
+            timeId = setInterval(onEf, 100);
+
+        }
+        function onMove(e) {
+            if (!e.touches || e.touches.length <= 0) return;
+            e.preventDefault();
+
+            if (getDistance(e.touches[0].clientX, e.touches[0].clientY, cx, cy) > r)
+            {
+                var subX = e.touches[0].clientX - cx;
+                var subY = e.touches[0].clientY - cy;
+
+                var subLen = Math.sqrt(subX * subX + subY * subY);//长度
+                if (subLen != 0)
+                {
+                    var rate = 1.0 / subLen;//缩放率 （Normallize 单位化)
+                    subX *= rate * r;
+                    subY *= rate * r;
+                }
+                joystick.style.left = cx + subX;
+                joystick.style.top = cy + subY;
+            }
+            else
+            {
+                joystick.style.left = e.touches[0].clientX;
+                joystick.style.top = e.touches[0].clientY;
+            }
+
+            console.log(joystick.style.left)
+
+        }
+        function onEnd(e) {
+            if(timeId)
+                clearInterval(timeId);
+
+
+            
+            bg.style.display = "none";
+            joystick.style.display = "none";
+
+        }
+
+        stage.addEventListener('touchstart', onStart);
+        stage.addEventListener('touchmove', onMove);
+        stage.addEventListener('touchend', onEnd);
+        stage.addEventListener('mousestart', onStart);
+        stage.addEventListener('mousemove', onMove);
+        stage.addEventListener('mouseend', onEnd);
+	</script>
+</body>
+</html>
